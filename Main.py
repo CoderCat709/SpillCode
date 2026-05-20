@@ -7,7 +7,7 @@ WIDTH, HEIGHT = 800, 600
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Spill")
 clock = pygame.time.Clock()
- 
+ # Konstanter og globale variabler
 CHARACTER_SCALE = 3.0
 GRAVITY         =  0.9
 JUMP_FORCE      = -14
@@ -16,10 +16,10 @@ MAX_HOLD_TIME   =  18
 SPEED           =   5
 ANIM_SPEED      =   8
 CHAR_W = CHAR_H = 0  # set after loading sheets
- 
+ # esensiell kode for å definere konstanter og globale variabler, ellers ville spillet ikke fungert i det hele tatt
 def scale_bg(path):
     return pygame.transform.scale(pygame.image.load(path).convert(), (WIDTH, HEIGHT))
- 
+ # esensiell kode for å skalere bakgrunnsbilder, ellers ville bakgrunnen være ekstremt liten og usynlig
 def load_sheet(path, scale=CHARACTER_SCALE):
     sheet      = pygame.image.load(path).convert_alpha()
     frame_w = frame_h = 32
@@ -29,12 +29,12 @@ def load_sheet(path, scale=CHARACTER_SCALE):
         pygame.transform.scale(sheet.subsurface((0, i * frame_h, frame_w, frame_h)), (sw, sh))
         for i in range(num_frames)
     ], sw, sh
- 
-frames_walk_right, CHAR_W, CHAR_H = load_sheet("v1_høyre.png")
-frames_walk_left,  _,      _      = load_sheet("v1_venstre.png")
-frames_idle_right, _,      _      = load_sheet("Side_SideHøyre.png")
-frames_idle_left,  _,      _      = load_sheet("Looking around.png")
- 
+ # esensiell kode for å laste inn spritesheets og skalere dem, ellers ville karakteren være ekstremt liten og usynlig
+frames_walk_right, CHAR_W, CHAR_H = load_sheet("Character_Animasjon/Character_BaseAnimasjon/v1_høyre.png")
+frames_walk_left,  _,      _      = load_sheet("Character_Animasjon/Character_BaseAnimasjon/v1_venstre.png")
+frames_idle_right, _,      _      = load_sheet("Character_Animasjon/Character_BaseAnimasjon/Looking_around_Høyre.png")
+frames_idle_left,  _,      _      = load_sheet("Character_Animasjon/Character_BaseAnimasjon/Looking_around_Venstre.png")
+ #hitbokser for alle rommene
 PLATFORMS_ROOM1 = [
     pygame.Rect(0,   490, 800, 110),
     pygame.Rect(750, 140, 210, 200),
@@ -89,22 +89,22 @@ PLATFORMS_ROOM5 = [
     pygame.Rect(70,   0, 40, 500),  # vegg venstre
     pygame.Rect(690,  0, 130, 350),  # vegg høyre
 ]
- 
+ # Eensiell del av koden for og kontrolere hvilken room du går i og er i,
 ROOMS = {
     "room1": {
-        "bg":        scale_bg("bakgrunn.png"),
+        "bg":        scale_bg("Bakgrunn/bakgrunn.png"),
         "platforms": PLATFORMS_ROOM1,
         "left":  None,
         "right": "room2",
     },
     "room2": {
-        "bg":        scale_bg("bakgrunnv3.png"),
+        "bg":        scale_bg("Bakgrunn/bakgrunnv3.png"),
         "platforms": PLATFORMS_ROOM2,
         "left":  "room1",
         "right": "room3",
     },
     "room3": {
-        "bg":        scale_bg("bakgrunnv4.png"),
+        "bg":        scale_bg("Bakgrunn/bakgrunnv4.png"),
         "platforms": PLATFORMS_ROOM3,
         "left":  "room2",   # standard venstre-exit (nede) → room2
         "right": None,
@@ -113,19 +113,19 @@ ROOMS = {
         "left_high_threshold": 250,
     },
     "room4": {
-        "bg":        scale_bg("bakgrunnv5.png"),
+        "bg":        scale_bg("Bakgrunn/bakgrunnv5.png"),
         "platforms": PLATFORMS_ROOM4,
         "left":  "room5",
         "right": "room3",
     },
     "room5": {
-        "bg":        scale_bg("bakgrunnv6.png"),
+        "bg":        scale_bg("Bakgrunn/bakgrunnv6.png"),
         "platforms": PLATFORMS_ROOM5,
         "left":  None,
         "right": "room4",
     },
 }
- 
+ # Eensiell del, debug for og fikse spill hitbokser og diverse
 DEBUG_PLATFORMS = True
  
 BG_COLOR     = (30, 30, 30)
@@ -192,7 +192,7 @@ def frames_for_state(moving):
         return frames_walk_right if last_direction == "right" else frames_walk_left
     else:
         return frames_idle_right if last_direction == "right" else frames_idle_left
- 
+ # esensiell kode for å fikse hvilket room du er gi og kontrolere hvor spilleren skal spawne, ellers ville spilleren spawnet på tilfeldige steder i rommet eller "i luften" og falt ned i avgrunnen.
 def resolve_platforms(px, py, vel_y, platforms):
     new_py    = py + vel_y
     grounded  = False
@@ -210,7 +210,7 @@ def resolve_platforms(px, py, vel_y, platforms):
         vel_y    = 0.0
         grounded = True
     return new_py, vel_y, grounded
- 
+ # esensiell kode for å håndtere kollisjoner med plattformer, ellers ville spilleren "falt gjennom" plattformene og ned i avgrunnen, eller "hoppet gjennom" plattformene og opp i taket
 def resolve_walls(px, py, platforms):
     player = pygame.Rect(int(px), int(py), CHAR_W, CHAR_H)
     for plat in platforms:
@@ -229,7 +229,7 @@ def resolve_walls(px, py, platforms):
         else:
             px = float(plat.right)
     return px
- 
+ # esensiell kode for å håndtere kollisjoner med vegger, ellers ville spilleren "klistret" seg fast i vegger og plattformer
 while True:
     clock.tick(60)
  
@@ -259,7 +259,7 @@ while True:
             if event.type == pygame.KEYUP and event.key == pygame.K_SPACE:
                 jump_hold_frames = 0
  
-    # ── MENU ──────────────────────────────────────────────
+    # ── MENU, ikke esensiell ──────────────────────────────────────────────
     if game_state == "menu":
         screen.fill(BG_COLOR)
         t = font_large.render("SPILL", True, (100, 180, 255))
@@ -267,7 +267,7 @@ while True:
         for btn in menu_buttons: btn.draw(screen)
         pygame.display.flip(); continue
  
-    # ── DEATH SCREEN ──────────────────────────────────────
+    # ── DEATH SCREEN, Ikke esensiell──────────────────────────────────────
     if game_state == "dead":
         death_alpha = min(255, death_alpha + 6)
         screen.fill((0, 0, 0))
