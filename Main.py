@@ -175,7 +175,7 @@ def get_spawn_y(start_px, platforms):
         if plat.left <= start_px + CHAR_W // 2 <= plat.right:
             return float(plat.top - CHAR_H)
     return float(HEIGHT - CHAR_H)
- 
+ #------------------------------Importet kode------------------------------
 def reset_player(side="center"):
     global px, py, vel_y, jump_hold_frames, on_ground
     global anim_state, anim_frame, anim_timer, idle_still_timer, last_direction
@@ -236,16 +236,16 @@ while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit(); sys.exit()
- 
+ # esensiell kode for å håndtere input og kontrollere spilltilstand, ellers ville spillet ikke reagert på input og ikke hatt noen form for meny eller dødscreen
         if game_state == "menu":
             for btn in menu_buttons:
                 if btn.clicked(event):
                     if   btn.text == "Spill":    game_state = "playing"; current_room = "room1"; reset_player("center")
                     elif btn.text == "Avslutt":  pygame.quit(); sys.exit()
- 
+ #Hva som skjer når du dør, esensiell kode for å starte spillet eller avslutte det
         elif game_state == "dead":
             if retry_button.clicked(event):
-                game_state = "playing"; current_room = "room2"; reset_player("left")
+                game_state = "playing"; current_room = "room1"; reset_player("left")
                 death_alpha = 0
             if menu_button2.clicked(event):
                 game_state = "menu"; death_alpha = 0
@@ -343,7 +343,7 @@ while True:
         anim_frame = 0
         anim_timer = 0
  
-    # ── Tegning ───────────────────────────────────────────
+    # ── Tegning, fikse bugs ───────────────────────────────────────────
     screen.blit(room["bg"], (0, 0))
  
     if DEBUG_PLATFORMS:
