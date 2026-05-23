@@ -7,7 +7,8 @@ WIDTH, HEIGHT = 800, 600
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Spill")
 clock = pygame.time.Clock()
- # Konstanter og globale variabler
+ 
+# Konstanter og globale variabler
 CHARACTER_SCALE = 3.0
 GRAVITY         =  0.9
 JUMP_FORCE      = -14
@@ -16,10 +17,10 @@ MAX_HOLD_TIME   =  18
 SPEED           =   5
 ANIM_SPEED      =   8
 CHAR_W = CHAR_H = 0  # set after loading sheets
- # esensiell kode for å definere konstanter og globale variabler, ellers ville spillet ikke fungert i det hele tatt
+ 
 def scale_bg(path):
     return pygame.transform.scale(pygame.image.load(path).convert(), (WIDTH, HEIGHT))
- # esensiell kode for å skalere bakgrunnsbilder, ellers ville bakgrunnen være ekstremt liten og usynlig
+ 
 def load_sheet(path, scale=CHARACTER_SCALE):
     sheet      = pygame.image.load(path).convert_alpha()
     frame_w = frame_h = 32
@@ -29,12 +30,48 @@ def load_sheet(path, scale=CHARACTER_SCALE):
         pygame.transform.scale(sheet.subsurface((0, i * frame_h, frame_w, frame_h)), (sw, sh))
         for i in range(num_frames)
     ], sw, sh
- # esensiell kode for å laste inn spritesheets og skalere dem, ellers ville karakteren være ekstremt liten og usynlig
+ 
+def load_png(path, scale=2.0):
+    """Load a PNG image, scale it, and return (image, rect)."""
+    image = pygame.image.load(path).convert_alpha()
+    w = int(image.get_width()  * scale)
+    h = int(image.get_height() * scale)
+    image = pygame.transform.scale(image, (w, h))
+    return image, image.get_rect()
+ 
 frames_walk_right, CHAR_W, CHAR_H = load_sheet("Character_Animasjon/Character_BaseAnimasjon/v1_høyre.png")
 frames_walk_left,  _,      _      = load_sheet("Character_Animasjon/Character_BaseAnimasjon/v1_venstre.png")
 frames_idle_right, _,      _      = load_sheet("Character_Animasjon/Character_BaseAnimasjon/Looking_around_Høyre.png")
 frames_idle_left,  _,      _      = load_sheet("Character_Animasjon/Character_BaseAnimasjon/Looking_around_Venstre.png")
- #hitbokser for alle rommene
+ 
+# ── Bone item ─────────────────────────────────────────────────────────────────
+class Bone(pygame.sprite.Sprite):
+    """A static collectible bone placed in a room.
+ 
+    Args:
+        x (int): Left edge of the bone sprite.
+        y (int): Top edge of the bone sprite.
+    """
+    
+    def __init__(self, x, y):
+        pygame.sprite.Sprite.__init__(self)
+        self.image, self.rect = load_png("Items/Bones_Item.png")
+        self.rect.topleft = (x, y)
+ 
+    def draw(self, surface):
+        surface.blit(self.image, self.rect)
+        
+ 
+_bone_x = 60   
+_bone_placeholder = Bone(_bone_x, 0)        
+_bone_ground_y = 490 - _bone_placeholder.rect.height
+bone = Bone(_bone_x, _bone_ground_y)           
+del _bone_placeholder
+ 
+bone_collected = False   
+# ─────────────Hitbox for the rooms───────────────────────────────────────────────────────
+ 
+# Hitbokser for alle rommene
 PLATFORMS_ROOM1 = [
     pygame.Rect(0,   490, 800, 110),
     pygame.Rect(750, 140, 210, 200),
@@ -74,22 +111,21 @@ PLATFORMS_ROOM3 = [
     pygame.Rect(360, 360, 140,  30),
     pygame.Rect(270, 190, 100,  30),
     pygame.Rect(600, 240,  90,  30),
-    pygame.Rect(0,   155, 170,  60),  # topp-venstre exit til room4
+    pygame.Rect(0,   155, 170,  60),  
 ]
  
 PLATFORMS_ROOM4 = [
-    pygame.Rect(500, 490, 400, 110),  # bakkeplatform
-    pygame.Rect(0, 490, 300, 110),  # bakkeplatform
-    pygame.Rect(500, 320,200,  30),  # tak
-
+    pygame.Rect(500, 490, 400, 110),
+    pygame.Rect(0,   490, 300, 110),
+    pygame.Rect(500, 320, 200,  30),
 ]
  
 PLATFORMS_ROOM5 = [
-    pygame.Rect(0,   490, 800, 110),  # bakke
-    pygame.Rect(70,   0, 40, 500),  # vegg venstre
-    pygame.Rect(690,  0, 130, 350),  # vegg høyre
+    pygame.Rect(0,   490, 800, 110),
+    pygame.Rect(70,    0,  40, 500),
+    pygame.Rect(690,   0, 130, 350),
 ]
- # Eensiell del av koden for og kontrolere hvilken room du går i og er i,
+ # Transisons to each room, and their backgrounds
 ROOMS = {
     "room1": {
         "bg":        scale_bg("Bakgrunn/bakgrunn.png"),
@@ -106,10 +142,9 @@ ROOMS = {
     "room3": {
         "bg":        scale_bg("Bakgrunn/bakgrunnv4.png"),
         "platforms": PLATFORMS_ROOM3,
-        "left":  "room2",   # standard venstre-exit (nede) → room2
+        "left":  "room2",
         "right": None,
-        # høyde-terskel: hvis py < dette og px<=0 → room4
-        "left_high": "room4",
+        "left_high":           "room4",
         "left_high_threshold": 250,
     },
     "room4": {
@@ -125,7 +160,7 @@ ROOMS = {
         "right": "room4",
     },
 }
- # Eensiell del, debug for og fikse spill hitbokser og diverse
+ 
 DEBUG_PLATFORMS = True
  
 BG_COLOR     = (30, 30, 30)
@@ -155,11 +190,11 @@ class Button:
  
 cx = WIDTH // 2 - 100
 menu_buttons = [
-    Button("Spill",    cx, 250, 200, 50),
-    Button("Avslutt",  cx, 320, 200, 50),
+    Button("Start",   cx, 250, 200, 50),
+    Button("Escape",  cx, 320, 200, 50),
 ]
-retry_button = Button("Prøv igjen", cx, 300, 200, 50)
-menu_button2 = Button("Til menyen", cx, 370, 200, 50)
+retry_button = Button("Try forever", cx, 300, 200, 50)
+menu_button2 = Button("Menu",        cx, 370, 200, 50)
  
 px = py = vel_y = 0.0
 jump_hold_frames = 0
@@ -175,10 +210,10 @@ def get_spawn_y(start_px, platforms):
         if plat.left <= start_px + CHAR_W // 2 <= plat.right:
             return float(plat.top - CHAR_H)
     return float(HEIGHT - CHAR_H)
- #------------------------------Importet kode------------------------------
+ 
 def reset_player(side="center"):
     global px, py, vel_y, jump_hold_frames, on_ground
-    global anim_state, anim_frame, anim_timer, idle_still_timer, last_direction
+    global anim_frame, anim_timer, last_direction
     if   side == "right": px = float(WIDTH - CHAR_W - 20)
     elif side == "left":  px = 20.0
     else:                 px = float(WIDTH // 2 - CHAR_W // 2)
@@ -192,7 +227,7 @@ def frames_for_state(moving):
         return frames_walk_right if last_direction == "right" else frames_walk_left
     else:
         return frames_idle_right if last_direction == "right" else frames_idle_left
- # esensiell kode for å fikse hvilket room du er gi og kontrolere hvor spilleren skal spawne, ellers ville spilleren spawnet på tilfeldige steder i rommet eller "i luften" og falt ned i avgrunnen.
+ 
 def resolve_platforms(px, py, vel_y, platforms):
     new_py    = py + vel_y
     grounded  = False
@@ -210,7 +245,7 @@ def resolve_platforms(px, py, vel_y, platforms):
         vel_y    = 0.0
         grounded = True
     return new_py, vel_y, grounded
- # esensiell kode for å håndtere kollisjoner med plattformer, ellers ville spilleren "falt gjennom" plattformene og ned i avgrunnen, eller "hoppet gjennom" plattformene og opp i taket
+ 
 def resolve_walls(px, py, platforms):
     player = pygame.Rect(int(px), int(py), CHAR_W, CHAR_H)
     for plat in platforms:
@@ -229,20 +264,21 @@ def resolve_walls(px, py, platforms):
         else:
             px = float(plat.right)
     return px
- # esensiell kode for å håndtere kollisjoner med vegger, ellers ville spilleren "klistret" seg fast i vegger og plattformer
+ 
+# ── Main loop ─────────────────────────────────────────────────────────────────
 while True:
     clock.tick(60)
  
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit(); sys.exit()
- # esensiell kode for å håndtere input og kontrollere spilltilstand, ellers ville spillet ikke reagert på input og ikke hatt noen form for meny eller dødscreen
+ 
         if game_state == "menu":
             for btn in menu_buttons:
                 if btn.clicked(event):
-                    if   btn.text == "Spill":    game_state = "playing"; current_room = "room1"; reset_player("center")
-                    elif btn.text == "Avslutt":  pygame.quit(); sys.exit()
- #Hva som skjer når du dør, esensiell kode for å starte spillet eller avslutte det
+                    if   btn.text == "Start":   game_state = "playing"; current_room = "room1"; reset_player("center")
+                    elif btn.text == "Escape": pygame.quit(); sys.exit()
+ 
         elif game_state == "dead":
             if retry_button.clicked(event):
                 game_state = "playing"; current_room = "room1"; reset_player("left")
@@ -259,7 +295,7 @@ while True:
             if event.type == pygame.KEYUP and event.key == pygame.K_SPACE:
                 jump_hold_frames = 0
  
-    # ── MENU, ikke esensiell ──────────────────────────────────────────────
+    # ── MENU ──────────────────────────────────────────────────────────────────
     if game_state == "menu":
         screen.fill(BG_COLOR)
         t = font_large.render("SPILL", True, (100, 180, 255))
@@ -267,7 +303,7 @@ while True:
         for btn in menu_buttons: btn.draw(screen)
         pygame.display.flip(); continue
  
-    # ── DEATH SCREEN, Ikke esensiell──────────────────────────────────────
+    # ── DEATH SCREEN ──────────────────────────────────────────────────────────
     if game_state == "dead":
         death_alpha = min(255, death_alpha + 6)
         screen.fill((0, 0, 0))
@@ -276,15 +312,15 @@ while True:
         overlay.fill((80, 0, 0))
         screen.blit(overlay, (0, 0))
         if death_alpha > 180:
-            t = font_large.render("Du døde!", True, (255, max(0, death_alpha - 180), 0))
+            t = font_large.render("Death took your soul", True, (255, max(0, death_alpha - 180), 0))
             screen.blit(t, t.get_rect(center=(WIDTH // 2, 150)))
-            s = font_med.render("Du falt ned i avgrunnen...", True, (180, 180, 180))
+            s = font_med.render("You have been consumed by the void", True, (180, 180, 180))
             screen.blit(s, s.get_rect(center=(WIDTH // 2, 230)))
             retry_button.draw(screen)
             menu_button2.draw(screen)
         pygame.display.flip(); continue
  
-    # ── PLAYING ───────────────────────────────────────────
+    # ── PLAYING ───────────────────────────────────────────────────────────────
     keys   = pygame.key.get_pressed()
     moving = False
     room   = ROOMS[current_room]
@@ -314,9 +350,14 @@ while True:
     if py > HEIGHT:
         game_state = "dead"; death_alpha = 0; continue
  
-    # ── Romoverganger ─────────────────────────────────────
+    # ── Bone collection check (only in room1, only if not yet collected) ──────
+    if current_room == "room1" and not bone_collected:
+        player_rect = pygame.Rect(int(px), int(py), CHAR_W, CHAR_H)
+        if player_rect.colliderect(bone.rect):
+            bone_collected = True
+ 
+    # ── Room transitions ──────────────────────────────────────────────────────
     if px + CHAR_W <= 0:
-        # Sjekk om rom har høyde-basert venstre-exit (f.eks. room3 → room4)
         high_dest   = room.get("left_high")
         high_thresh = room.get("left_high_threshold", 999)
         if high_dest and py < high_thresh:
@@ -332,7 +373,7 @@ while True:
         else:
             px = float(WIDTH - CHAR_W)
  
-    # ── Animasjon ─────────────────────────────────────────
+    # ── Animation ───────────────────────────────────────────────────────────────
     current_frames = frames_for_state(moving)
     if moving:
         anim_timer += 1
@@ -343,16 +384,23 @@ while True:
         anim_frame = 0
         anim_timer = 0
  
-    # ── Tegning, fikse bugs ───────────────────────────────────────────
+    # ── Draw ──────────────────────────────────────────────────────────────────
     screen.blit(room["bg"], (0, 0))
  
     if DEBUG_PLATFORMS:
         for plat in room["platforms"]:
             pygame.draw.rect(screen, (255, 0, 0), plat, 2)
  
+    # Draw bone in room1 if not yet collected
+    if current_room == "room1" and not bone_collected:
+        bone.draw(screen)
+ 
     screen.blit(current_frames[anim_frame], (int(px), int(py)))
-    screen.blit(font_small.render(
-        f"ESC: Meny  |  SPACE: Hopp  |  PIL: Beveg  |  Rom: {current_room}",
-        True, (220, 220, 220)), (10, 10))
+ 
+    # Show if taken or not, and current room in HUD
+    hud_text = "ESC: Meny  |  SPACE: Hopp  |  PIL: Beveg  |  Rom: " + current_room
+    if bone_collected:
+        hud_text += "  |  bone: 1"
+    screen.blit(font_small.render(hud_text, True, (220, 220, 220)), (10, 10))
  
     pygame.display.flip()

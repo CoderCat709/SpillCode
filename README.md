@@ -11,7 +11,7 @@ Spill Fokus Utforskning Puzzles på tid Tolkning av symboler og tekster
 
 logg uke 9
 fiksen glich mellom vegger og hitbokser i pygame
-
+legge til animasjoner inn i pygame
 
 logg uke 12
 jeg ønsker og få til hitbokene i spillet mitt
@@ -28,3 +28,9 @@ Forbedre filsystem til animasjoner.
 lagde nye bein animasjoner for items i spillet mitt, og items som skulle være triggerne for disse animasjonene.
 Forbedre Readme for og forbedre logg
 legge til notater til Main.py, for og huske hvilken deler av koden var esenisell og ikke esensiell, med små forklaringer av koden sin bruk i spillet
+
+Hva jeg har igjen;
+legge inn load animasjon
+legge til items i spillet
+legge til slutt skjerm
+legge til ett til room (sluttroom) som er på tåppen av spillet
