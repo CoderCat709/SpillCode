@@ -39,19 +39,48 @@ def load_png(path, scale=2.0):
     image = pygame.transform.scale(image, (w, h))
     return image, image.get_rect()
  
+# Spawn animation sheets — spawner nå skal være 800x600 px, så vi skalerer hver frame til det.
+# En auto detect code jeg fant fordi animasjonen ble 32x32 men var 100x100 px, så det var vanskelig å vite hvor mange frames det var.
+def load_sheet_fullscreen(path):
+    sheet  = pygame.image.load(path).convert_alpha()
+    sw, sh = sheet.get_width(), sheet.get_height()
+ 
+    # En fiks for og fikse spawn animasjonene som ikke er 256x256 / 300x300 px
+    tile_size = None
+    for size in [256, 200, 160, 128, 100, 96, 80, 64, 48, 32]:
+        if sw % size == 0 and sh % size == 0:
+            tile_size = size
+            break
+    if tile_size is None:
+        tile_size = sw  # fallback: single-column sheet
+    #Fikse spawn animasjon.
+    cols = sw // tile_size
+    rows = sh // tile_size
+    frames = []
+    for row in range(rows):
+        for col in range(cols):
+            cell = sheet.subsurface((col * tile_size, row * tile_size, tile_size, tile_size))
+            frames.append(pygame.transform.scale(cell, (WIDTH, HEIGHT)))
+    return frames
+ 
 frames_walk_right, CHAR_W, CHAR_H = load_sheet("Character_Animasjon/Character_BaseAnimasjon/v1_høyre.png")
 frames_walk_left,  _,      _      = load_sheet("Character_Animasjon/Character_BaseAnimasjon/v1_venstre.png")
 frames_idle_right, _,      _      = load_sheet("Character_Animasjon/Character_BaseAnimasjon/Looking_around_Høyre.png")
 frames_idle_left,  _,      _      = load_sheet("Character_Animasjon/Character_BaseAnimasjon/Looking_around_Venstre.png")
  
-# ── Bone item ─────────────────────────────────────────────────────────────────
-class Bone(pygame.sprite.Sprite):
-    """A static collectible bone placed in a room.
+# Spawn animation sheets
+frames_spawn     = load_sheet_fullscreen("Load_Animasjon/Spawn_animasjon.png")
+frames_spawn_end = load_sheet_fullscreen("Load_Animasjon/Spawn_ani_END.png")
  
-    Args:
-        x (int): Left edge of the bone sprite.
-        y (int): Top edge of the bone sprite.
-    """
+# Spawn animation state variables
+spawn_frame      = 0
+spawn_timer      = 0
+spawn_phase      = "intro"  # "intro" -> Spawn_animasjon, "end" -> Spawn_ani_END
+SPAWN_ANIM_SPEED = 6        # game ticks per frame (lower = faster)
+ 
+# Bein Items
+class Bone(pygame.sprite.Sprite):
+    """A static collectible bone placed in a room."""
     
     def __init__(self, x, y):
         pygame.sprite.Sprite.__init__(self)
@@ -60,18 +89,27 @@ class Bone(pygame.sprite.Sprite):
  
     def draw(self, surface):
         surface.blit(self.image, self.rect)
-        
  
+# ── Bein i room1, ─────────────────────────────────────────────────────────────
 _bone_x = 60   
 _bone_placeholder = Bone(_bone_x, 0)        
 _bone_ground_y = 490 - _bone_placeholder.rect.height
 bone = Bone(_bone_x, _bone_ground_y)           
 del _bone_placeholder
  
-bone_collected = False   
-# ─────────────Hitbox for the rooms───────────────────────────────────────────────────────
+bone_collected = False
  
-# Hitbokser for alle rommene
+# ── Bein i room3, ARMER ─────────────────────────────────────────────────────────────
+_bone3_x = 400
+_bone3_placeholder = Bone(_bone3_x, 0)
+_bone3_ground_y = 490 - _bone3_placeholder.rect.height
+bone_room3 = Bone(_bone3_x, _bone3_ground_y)
+del _bone3_placeholder
+ 
+bone_room3_collected = False
+ 
+# ─────────────Hitbox for romene───────────────────────────────────────────────────────
+ 
 PLATFORMS_ROOM1 = [
     pygame.Rect(0,   490, 800, 110),
     pygame.Rect(750, 140, 210, 200),
@@ -125,7 +163,7 @@ PLATFORMS_ROOM5 = [
     pygame.Rect(70,    0,  40, 500),
     pygame.Rect(690,   0, 130, 350),
 ]
- # Transisons to each room, and their backgrounds
+ 
 ROOMS = {
     "room1": {
         "bg":        scale_bg("Bakgrunn/bakgrunn.png"),
@@ -275,9 +313,16 @@ while True:
  
         if game_state == "menu":
             for btn in menu_buttons:
-                if btn.clicked(event):
-                    if   btn.text == "Start":   game_state = "playing"; current_room = "room1"; reset_player("center")
-                    elif btn.text == "Escape": pygame.quit(); sys.exit()
+                if btn.clicked(event): #denne delen er for animasjon even på starten,
+                    if btn.text == "Start":
+                        current_room = "room1"
+                        reset_player("center")
+                        game_state   = "spawning"
+                        spawn_frame  = 0
+                        spawn_timer  = 0
+                        spawn_phase  = "intro"
+                    elif btn.text == "Escape":
+                        pygame.quit(); sys.exit()
  
         elif game_state == "dead":
             if retry_button.clicked(event):
@@ -320,6 +365,29 @@ while True:
             menu_button2.draw(screen)
         pygame.display.flip(); continue
  
+    # ── SPAWNING ──────────────────────────────────────────────────────────────
+    # Dette er en fiks for spawn animasjonene med ruk av intro,
+    if game_state == "spawning":
+        screen.blit(ROOMS[current_room]["bg"], (0, 0))
+ 
+        sheet = frames_spawn if spawn_phase == "intro" else frames_spawn_end
+ 
+        # Draw fullscreen — each frame already scaled to 800x600
+        screen.blit(sheet[spawn_frame], (0, 0))
+ 
+        spawn_timer += 1
+        if spawn_timer >= SPAWN_ANIM_SPEED:
+            spawn_timer  = 0
+            spawn_frame += 1
+            if spawn_frame >= len(sheet):
+                if spawn_phase == "intro":
+                    spawn_phase = "end"
+                    spawn_frame = 0
+                else:
+                    game_state = "playing"
+ 
+        pygame.display.flip(); continue
+ 
     # ── PLAYING ───────────────────────────────────────────────────────────────
     keys   = pygame.key.get_pressed()
     moving = False
@@ -350,11 +418,18 @@ while True:
     if py > HEIGHT:
         game_state = "dead"; death_alpha = 0; continue
  
-    # ── Bone collection check (only in room1, only if not yet collected) ──────
+    # ── Bone collection check (room1) ─────────────────────────────────────────
     if current_room == "room1" and not bone_collected:
         player_rect = pygame.Rect(int(px), int(py), CHAR_W, CHAR_H)
         if player_rect.colliderect(bone.rect):
             bone_collected = True
+ 
+    # ── Bone collection check (room3) ─────────────────────────────────────────*
+    #
+    if current_room == "room3" and not bone_room3_collected:
+        player_rect = pygame.Rect(int(px), int(py), CHAR_W, CHAR_H)
+        if player_rect.colliderect(bone_room3.rect):
+            bone_room3_collected = True
  
     # ── Room transitions ──────────────────────────────────────────────────────
     if px + CHAR_W <= 0:
@@ -373,7 +448,7 @@ while True:
         else:
             px = float(WIDTH - CHAR_W)
  
-    # ── Animation ───────────────────────────────────────────────────────────────
+    # ── Animation ─────────────────────────────────────────────────────────────
     current_frames = frames_for_state(moving)
     if moving:
         anim_timer += 1
@@ -391,16 +466,19 @@ while True:
         for plat in room["platforms"]:
             pygame.draw.rect(screen, (255, 0, 0), plat, 2)
  
-    # Draw bone in room1 if not yet collected
     if current_room == "room1" and not bone_collected:
         bone.draw(screen)
  
+    if current_room == "room3" and not bone_room3_collected:
+        bone_room3.draw(screen)
+ 
     screen.blit(current_frames[anim_frame], (int(px), int(py)))
  
-    # Show if taken or not, and current room in HUD
+    # HUD
     hud_text = "ESC: Meny  |  SPACE: Hopp  |  PIL: Beveg  |  Rom: " + current_room
-    if bone_collected:
-        hud_text += "  |  bone: 1"
+    total_bones = int(bone_collected) + int(bone_room3_collected)
+    if total_bones:
+        hud_text += f"  |  bones: {total_bones}"
     screen.blit(font_small.render(hud_text, True, (220, 220, 220)), (10, 10))
  
     pygame.display.flip()

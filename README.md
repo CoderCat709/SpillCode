@@ -29,8 +29,22 @@ lagde nye bein animasjoner for items i spillet mitt, og items som skulle være t
 Forbedre Readme for og forbedre logg
 legge til notater til Main.py, for og huske hvilken deler av koden var esenisell og ikke esensiell, med små forklaringer av koden sin bruk i spillet
 
+
+Helg arbeid,
+jeg har semi fikset Animasjonene
+fikset spawn animasjon til å spille som fullskjerm intro ramme for ramme
+fikset grid-spritesheet lasting så flere kolonner leses riktig
+lagt til bein item i rom 3 som kan plukkes opp, men posison er feil
+prøvde også og fjerne ubruklige komentarer på Main.py, for og gjøre kode ren
+
+problemer,
+Pågrunn av lengere kode påvirker lagg hvis du prøve og kolidere med hitboksene fra bunnen
+
 Hva jeg har igjen;
-legge inn load animasjon
-legge til items i spillet
-legge til slutt skjerm
-legge til ett til room (sluttroom) som er på tåppen av spillet
+legge til items i spillet, (Har gjort)
+legge til slutt skjerm (Bare en frame som loder på rom 5 da du går til toppen som sier at du har vunnet)
+legge til ett til room (sluttroom) som er på tåppen av spillet (pixel animasjon)
+
+Hva claude har Laget,
+Claude har laget trappe fiksen som er rundt 150~ linjer med kode
+den har hjelpet med med og fikse animasjon load problemer med bildene, for lage en stander som er enkel og fikse
