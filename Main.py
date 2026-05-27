@@ -90,20 +90,30 @@ class Bone(pygame.sprite.Sprite):
     def draw(self, surface):
         surface.blit(self.image, self.rect)
  
+class BoneA(pygame.sprite.Sprite):
+    """A static collectible bone placed in a room."""
+    
+    def __init__(self, x, y):
+        pygame.sprite.Sprite.__init__(self)
+        self.image, self.rect = load_png("Items/Bone_Arms.png")
+        self.rect.topleft = (x, y)
+ 
+    def draw(self, surface):
+        surface.blit(self.image, self.rect)
 # ── Bein i room1, ─────────────────────────────────────────────────────────────
 _bone_x = 60   
 _bone_placeholder = Bone(_bone_x, 0)        
-_bone_ground_y = 490 - _bone_placeholder.rect.height
+_bone_ground_y = 505 - _bone_placeholder.rect.height
 bone = Bone(_bone_x, _bone_ground_y)           
 del _bone_placeholder
  
 bone_collected = False
  
 # ── Bein i room3, ARMER ─────────────────────────────────────────────────────────────
-_bone3_x = 400
-_bone3_placeholder = Bone(_bone3_x, 0)
-_bone3_ground_y = 490 - _bone3_placeholder.rect.height
-bone_room3 = Bone(_bone3_x, _bone3_ground_y)
+_bone3_x = 250
+_bone3_placeholder = BoneA(_bone3_x, 0)
+_bone3_ground_y = 505 - _bone3_placeholder.rect.height
+bone_room3 = BoneA(_bone3_x, _bone3_ground_y)
 del _bone3_placeholder
  
 bone_room3_collected = False
@@ -156,6 +166,8 @@ PLATFORMS_ROOM4 = [
     pygame.Rect(500, 490, 400, 110),
     pygame.Rect(0,   490, 300, 110),
     pygame.Rect(500, 320, 200,  30),
+    pygame.Rect(150, 200, 200,  30),
+    pygame.Rect(370,  40, 140,  30),
 ]
  
 PLATFORMS_ROOM5 = [
@@ -209,7 +221,7 @@ TEXT_COLOR   = (255, 255, 255)
 font_large = pygame.font.SysFont(None, 64)
 font_med   = pygame.font.SysFont(None, 36)
 font_small = pygame.font.SysFont(None, 24)
- 
+ # En enkel knappklasse for menyen og dødscreenet
 class Button:
     def __init__(self, text, x, y, w, h):
         self.text = text
@@ -233,7 +245,7 @@ menu_buttons = [
 ]
 retry_button = Button("Try forever", cx, 300, 200, 50)
 menu_button2 = Button("Menu",        cx, 370, 200, 50)
- 
+ # Spiller state variabler
 px = py = vel_y = 0.0
 jump_hold_frames = 0
 on_ground        = True
@@ -242,13 +254,13 @@ last_direction   = "right"
 current_room     = "room1"
 game_state       = "menu"
 death_alpha      = 0
- 
+ # En funksjon for å finne spawn Y basert på plattformene i rommet, slik at spilleren spawner på en plattform hvis mulig.
 def get_spawn_y(start_px, platforms):
     for plat in sorted(platforms, key=lambda p: p.top, reverse=True):
         if plat.left <= start_px + CHAR_W // 2 <= plat.right:
             return float(plat.top - CHAR_H)
     return float(HEIGHT - CHAR_H)
- 
+ #usikker at funker
 def reset_player(side="center"):
     global px, py, vel_y, jump_hold_frames, on_ground
     global anim_frame, anim_timer, last_direction
@@ -259,7 +271,7 @@ def reset_player(side="center"):
     vel_y          = 0.0; jump_hold_frames = 0; on_ground = True
     anim_frame = anim_timer = 0
     last_direction = "right"
- 
+ #fikse trappene og animasjonene, slik at det ser bedre ut
 def frames_for_state(moving):
     if moving:
         return frames_walk_right if last_direction == "right" else frames_walk_left
@@ -283,7 +295,7 @@ def resolve_platforms(px, py, vel_y, platforms):
         vel_y    = 0.0
         grounded = True
     return new_py, vel_y, grounded
- 
+ #fikse trappene og animasjonene 
 def resolve_walls(px, py, platforms):
     player = pygame.Rect(int(px), int(py), CHAR_W, CHAR_H)
     for plat in platforms:
@@ -366,7 +378,7 @@ while True:
         pygame.display.flip(); continue
  
     # ── SPAWNING ──────────────────────────────────────────────────────────────
-    # Dette er en fiks for spawn animasjonene med ruk av intro,
+    # Dette er en fiks for spawn animasjonene med bruk av intro
     if game_state == "spawning":
         screen.blit(ROOMS[current_room]["bg"], (0, 0))
  
@@ -425,7 +437,6 @@ while True:
             bone_collected = True
  
     # ── Bone collection check (room3) ─────────────────────────────────────────*
-    #
     if current_room == "room3" and not bone_room3_collected:
         player_rect = pygame.Rect(int(px), int(py), CHAR_W, CHAR_H)
         if player_rect.colliderect(bone_room3.rect):
@@ -459,7 +470,7 @@ while True:
         anim_frame = 0
         anim_timer = 0
  
-    # ── Draw ──────────────────────────────────────────────────────────────────
+    # ── Bone collection check, usikker om fungerer ──────────────────────────────────────────────────────
     screen.blit(room["bg"], (0, 0))
  
     if DEBUG_PLATFORMS:

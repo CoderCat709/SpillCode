@@ -3,11 +3,10 @@ Made by Henrik Huseby
 
 Logg Uke 7 
 Spillet skal revolve rundt en person / noe som controlerer en person som prøver og få en uendelig / faktisk død isteden for gjenfødelse theme: puzzle game
-controls: w- interact d- høyre a - venstre
+controls: space for hopp- høyre pil- høyre, venstre pil - venstre
 design: basert på teraria
 Game mechanics vandre runt i et underjordisk bygg og finde objekter for og starte en maskin.
 Spill Fokus Utforskning Puzzles på tid Tolkning av symboler og tekster
-
 
 logg uke 9
 fiksen glich mellom vegger og hitbokser i pygame
@@ -29,8 +28,7 @@ lagde nye bein animasjoner for items i spillet mitt, og items som skulle være t
 Forbedre Readme for og forbedre logg
 legge til notater til Main.py, for og huske hvilken deler av koden var esenisell og ikke esensiell, med små forklaringer av koden sin bruk i spillet
 
-
-Helg arbeid,
+Helg arbeid, (Uke21)
 jeg har semi fikset Animasjonene
 fikset spawn animasjon til å spille som fullskjerm intro ramme for ramme
 fikset grid-spritesheet lasting så flere kolonner leses riktig
@@ -39,6 +37,8 @@ prøvde også og fjerne ubruklige komentarer på Main.py, for og gjøre kode ren
 
 problemer,
 Pågrunn av lengere kode påvirker lagg hvis du prøve og kolidere med hitboksene fra bunnen
+små hitbokser kan klippes ingjennom pågrunn av måten trappe funkjsonen fungerer
+Du trenger ikke og ta beinene for og fortsette med spillet eller vinne
 
 Hva jeg har igjen;
 legge til items i spillet, (Har gjort)
