@@ -11,6 +11,7 @@ Logg uke 13 jeg har lagd 3 nye i piksel og impleminterte dem for og legge til ny
 
 Logg uke 21 
 Jeg har jobbet med de forksjellige rommene på spillet mitt, fikse mange forksjellige bugs i koden. Prøve og implimentere items i spillet mitt, Forbedre filsystem til animasjoner. lagde nye bein animasjoner for items i spillet mitt, og items som skulle være triggerne for disse animasjonene. Forbedre Readme for og forbedre logg legge til notater til Main.py, for og huske hvilken deler av koden var esenisell og ikke esensiell, med små forklaringer av koden sin bruk i spillet
+leg har lagt til a- til venstre og w- høyre,
 
 Helg arbeid, (Uke21) 
 jeg har semi fikset Animasjonene fikset spawn animasjon til å spille som fullskjerm intro ramme for ramme fikset grid-spritesheet lasting så flere kolonner leses riktig lagt til bein item i rom 3 som kan plukkes opp, men posison er feil prøvde også og fjerne ubruklige komentarer på Main.py, for og gjøre kode ren

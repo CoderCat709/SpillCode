@@ -259,7 +259,7 @@ ROOMS = {
     },
 }
  
-DEBUG_PLATFORMS = True
+DEBUG_PLATFORMS = False
  
 #Colours and fonts 
 BG_COLOR     = (30, 30, 30)
@@ -502,8 +502,16 @@ while True:
             px -= SPEED; last_direction = "left";  moving = True
         if keys[pygame.K_RIGHT]:
             px += SPEED; last_direction = "right"; moving = True
+        if keys[pygame.K_a]:
+            px -= SPEED; last_direction = "left";  moving = True
+        if keys[pygame.K_d]:
+            px += SPEED; last_direction = "right"; moving = True
         if keys[pygame.K_SPACE] and jump_hold_frames > 0:
             vel_y += HOLD_FORCE; jump_hold_frames -= 1
+        if keys[pygame.K_p]:
+            DEBUG_PLATFORMS = True
+        if keys[pygame.K_o]:
+            DEBUG_PLATFORMS = False
     else:
         keys = {}   
  
