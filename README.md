@@ -29,3 +29,8 @@ Hva claude har Laget, Claude har laget trappe fiksen som er rundt 150~ linjer me
 GitHub
 Mange av commitene fungerte ikke fordi skolenettet var for tregt og hang seg opp.
 Derfor står det bare v4, v5 og organisert på GitHub. Versjon v1, v2 og v3 ble gjort lokalt under rydding av koden.
+
+Bruker testere
+Kasper; Spillet har bra animasjoner, men trenger en slutt,
+Leo; Bra base game, men du burde legge til items
+Henry R; Mange kule design, men du burge legge til mer gameplay
