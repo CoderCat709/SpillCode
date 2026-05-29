@@ -97,18 +97,19 @@ frames_collect_arms = load_sheet_trigger("Character_Animasjon/Trigger_Animasjon/
 frames_end_anim = load_sheet_trigger("Load_Animasjon/END_Animasjon.png", tile_size=100)
 
 #Load menu/death/end backgrounds
+#Menu background
 try:
     bg_menu  = scale_bg("screen/start_menu.png")
 except Exception:
     bg_menu  = None
-
+#death screen background
 try:
     bg_death = scale_bg("screen/Death_Screen.png")
 except Exception:
     bg_death = None
-
+#END screen background 
 try:
-    bg_end = scale_bg("end_screen.png")
+    bg_end = scale_bg("screen/end_screen.png")
 except Exception:
     bg_end = None
 
@@ -158,9 +159,9 @@ bone              = Bone(_bone_x, _bone_ground_y)
 del _bone_placeholder
 bone_collected    = False
 
-_bone3_x           = 250
+_bone3_x           = 630
 _bone3_placeholder = BoneA(_bone3_x, 0)
-_bone3_ground_y    = 505 - _bone3_placeholder.rect.height
+_bone3_ground_y    = 240 - _bone3_placeholder.rect.height
 bone_room3         = BoneA(_bone3_x, _bone3_ground_y)
 del _bone3_placeholder
  
@@ -365,7 +366,7 @@ def resolve_platforms(px, py, vel_y, platforms):
         vel_y    = 0.0
         grounded = True
     return new_py, vel_y, grounded
-
+# Resolves horizontal collisions with platforms, returning the new x position.
 def resolve_walls(px, py, platforms):
     player = pygame.Rect(int(px), int(py), CHAR_W, CHAR_H)
     for plat in platforms:
@@ -398,7 +399,7 @@ def start_collect_anim(frames):
 #Main loop
 while True:
     clock.tick(60)
-
+    #Event handling
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit(); sys.exit()
@@ -416,7 +417,7 @@ while True:
                     elif btn.text == "Escape":
                         pygame.quit(); sys.exit()
 
-#Game state event handling
+        #Game state event handling
         elif game_state == "dead":
             if retry_button.clicked(event):
                 game_state   = "playing"
@@ -427,14 +428,14 @@ while True:
                 game_state  = "menu"
                 death_alpha = 0
 
-#Game state END
+        #Game state END
         elif game_state == "end":
             if menu_button2.clicked(event):
                 game_state   = "menu"
                 current_room = "room1"
                 reset_player("center")
 
-#Playing state input handling
+        #Playing state input handling
         elif game_state == "playing" and not collect_anim_active:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
@@ -493,7 +494,7 @@ while True:
         overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
         overlay.fill((0, 0, 0, 100))
         screen.blit(overlay, (0, 0))
-        t = font_large.render("Your soul Retured", True, (255, 220, 100))
+        t = font_large.render("Your soul Returned", True, (255, 220, 100))
         screen.blit(t, t.get_rect(center=(WIDTH // 2, 160)))
         menu_button2.draw(screen)
         pygame.display.flip()
@@ -520,7 +521,7 @@ while True:
     #Playing
     room   = ROOMS[current_room]
     moving = False
-
+    # Input handling for movement and actions, disabled during collection and animations
     if not collect_anim_active and not end_anim_active:
         keys = pygame.key.get_pressed()
         if keys[pygame.K_LEFT]:
@@ -539,7 +540,7 @@ while True:
             DEBUG_PLATFORMS = False
 
     px = resolve_walls(px, py, room["platforms"])
-
+    # Ground collision and platform resolution
     if on_ground:
         for plat in room["platforms"]:
             if px + CHAR_W <= plat.left or px >= plat.right:
@@ -562,7 +563,7 @@ while True:
             bone_collected = True
             # Trigger the fullscreen legs collection animation, fungerer ikke helt.
             start_collect_anim(frames_collect_legs)
-
+    # Arm bone collection in room 3, also triggers a fullscreen animation
     if current_room == "room3" and not bone_room3_collected:
         player_rect = pygame.Rect(int(px), int(py), CHAR_W, CHAR_H)
         if player_rect.colliderect(bone_room3.rect):
@@ -576,18 +577,23 @@ while True:
             high_dest   = room.get("left_high")
             high_thresh = room.get("left_high_threshold", 999)
             if high_dest and py < high_thresh:
-                current_room = high_dest; reset_player("right")
+                if current_room == "room3" and not bone_room3_collected:
+                    px = 0.0
+                else:
+                    current_room = high_dest; reset_player("right")
             elif room["left"]:
                 current_room = room["left"]; reset_player("right")
             else:
                 px = 0.0
-
+        #Bone not collected in room 1, player cannot leave
         if px >= WIDTH:
-            if room["right"]:
+            if current_room == "room1" and not bone_collected:
+                px = float(WIDTH - CHAR_W)
+            elif room["right"]:
                 current_room = room["right"]; reset_player("left")
             else:
                 px = float(WIDTH - CHAR_W)
-
+        #Bone not collected in room 3, player cannot leave
         if py <= 0:
             mid_dest  = room.get("middel_high")
             mid_x_min = WIDTH // 2 - 100
@@ -597,7 +603,7 @@ while True:
             else:
                 py = 0.0
 
-        # End trigger walls in room6
+        # End game trigger in room 6 when reaching left or right edge
         if current_room == "room6":
             if px <= 20 or px + CHAR_W >= WIDTH - 20:
                 end_anim_active = True
@@ -615,16 +621,16 @@ while True:
         anim_frame = 0
         anim_timer = 0
 
-    # Draw world
+# Draw world
     screen.blit(room["bg"], (0, 0))
-
+# Draw platforms (for debugging), p to activate, o to deactivate
     if DEBUG_PLATFORMS:
         for plat in room["platforms"]:
             pygame.draw.rect(screen, (255, 0, 0), plat, 2)
-
+#Bone collection in room 1, player cannot leave until collected
     if current_room == "room1" and not bone_collected:
         bone.draw(screen)
-
+#Bone collection in room 3, player cannot leave until collected
     if current_room == "room3" and not bone_room3_collected:
         bone_room3.draw(screen)
 
